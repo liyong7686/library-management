@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首页 - 图书管理系统</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a th:href="@{/dashboard}">图书管理系统</a>
+            </div>
+            <div class="nav-menu" th:if="${session.user != null}">
+                <a th:href="@{/dashboard}">首页</a>
+                <a th:href="@{/books}">图书列表</a>
+                <a th:href="@{/borrow}" th:if="${session.user.role.name() == 'USER' || session.user.role.name() == 'ADMIN'}">我的借阅</a>
+                <a th:href="@{/books/admin}" th:if="${session.user.role.name() == 'ADMIN'}">图书管理</a>
+                <a th:href="@{/borrow/admin}" th:if="${session.user.role.name() == 'ADMIN'}">借阅管理</a>
+                <a th:href="@{/logout}">退出</a>
+            </div>
+            <div class="nav-menu" th:if="${session.user == null}">
+                <a th:href="@{/dashboard}">首页</a>
+                <a th:href="@{/books}">图书列表</a>
+                <a th:href="@{/login}">登录</a>
+                <a th:href="@{/register}">注册</a>
+            </div>
+        </div>
+    </nav>
+    
+    <main class="main-content">
+        <div class="container" style="padding: 20px;">
+            <h1>欢迎，<span th:text="${user?.realName ?: user?.username ?: '访客'}">用户</span>！</h1>
+            
+            <div th:if="${user == null}" class="guest-welcome">
+                <div class="alert alert-info">
+                    <h3>访客模式</h3>
+                    <p>您可以浏览图书列表，但无法借阅图书。请<a th:href="@{/register}">注册</a>或<a th:href="@{/login}">登录</a>以使用更多功能。</p>
+                </div>
+            </div>
+            
+            <div th:if="${user != null}" class="user-dashboard">
+                <div class="dashboard-stats">
+                    <div class="stat-card" th:if="${user.role.name() == 'ADMIN'}">
+                        <h3>管理员功能</h3>
+                        <ul>
+                            <li><a th:href="@{/books/admin}">图书管理</a></li>
+                            <li><a th:href="@{/borrow/admin}">借阅管理</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="stat-card" th:if="${user.role.name() == 'USER' || user.role.name() == 'ADMIN'}">
+                        <h3>我的借阅</h3>
+                        <p><a th:href="@{/borrow}">查看我的借阅记录</a></p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="quick-actions">
+                <h2>快速操作</h2>
+                <div class="action-buttons">
+                    <a th:href="@{/books}" class="btn btn-primary">浏览图书</a>
+                    <a th:href="@{/books/admin}" class="btn btn-success" th:if="${user?.role?.name() == 'ADMIN'}">图书管理</a>
+                    <a th:href="@{/borrow}" class="btn btn-info" th:if="${user?.role?.name() == 'USER' || user?.role?.name() == 'ADMIN'}">我的借阅</a>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 图书管理系统. All rights reserved.</p>
+        </div>
+    </footer>
+    
+    <script th:src="@{/js/common.js}"></script>
+</body>
+</html>
+

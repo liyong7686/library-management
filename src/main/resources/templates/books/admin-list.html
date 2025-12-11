@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图书管理 - 图书管理系统</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a th:href="@{/dashboard}">图书管理系统</a>
+            </div>
+            <div class="nav-menu">
+                <a th:href="@{/dashboard}">首页</a>
+                <a th:href="@{/books}">图书列表</a>
+                <a th:href="@{/borrow}">我的借阅</a>
+                <a th:href="@{/books/admin}">图书管理</a>
+                <a th:href="@{/borrow/admin}">借阅管理</a>
+                <a th:href="@{/logout}">退出</a>
+            </div>
+        </div>
+    </nav>
+    
+    <main class="main-content">
+        <div class="container" style="padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h1>图书管理</h1>
+                <a th:href="@{/books/admin/add}" class="btn btn-success">添加图书</a>
+            </div>
+            
+            <div id="message"></div>
+            
+            <!-- 分页大小选择器 -->
+            <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <label>每页显示：</label>
+                    <select id="pageSizeSelect" onchange="changePageSize(this.value)" style="padding: 5px; margin-left: 10px;">
+                        <option value="10" th:selected="${pageSize == 10}">10</option>
+                        <option value="20" th:selected="${pageSize == 20}">20</option>
+                        <option value="50" th:selected="${pageSize == 50}">50</option>
+                        <option value="100" th:selected="${pageSize == 100}">100</option>
+                    </select>
+                </div>
+            </div>
+            
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>书名</th>
+                        <th>作者</th>
+                        <th>ISBN</th>
+                        <th>分类</th>
+                        <th>总册数</th>
+                        <th>可借数量</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="book : ${books}">
+                        <td th:text="${book.id}">1</td>
+                        <td th:text="${book.title}">书名</td>
+                        <td th:text="${book.author}">作者</td>
+                        <td th:text="${book.isbn}">ISBN</td>
+                        <td th:text="${book.category}">分类</td>
+                        <td th:text="${book.totalCopies}">0</td>
+                        <td th:text="${book.availableCopies}">0</td>
+                        <td>
+                            <a th:href="@{/books/admin/edit/{id}(id=${book.id})}" class="btn btn-sm btn-info">编辑</a>
+                            <button th:onclick="'deleteBook(' + ${book.id} + ')'" class="btn btn-sm btn-danger">删除</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <!-- 分页组件 -->
+            <div th:if="${totalPages != null && totalPages > 0}" class="pagination" style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <span th:text="'第 ' + (${currentPage} + 1) + ' 页 / 共 ' + ${totalPages} + ' 页，共 ' + ${totalElements} + ' 条记录'">页码信息</span>
+                </div>
+                <div>
+                    <a th:if="${currentPage > 0}" 
+                       th:href="@{/books/admin(page=${currentPage - 1}, size=${pageSize})}" 
+                       class="btn btn-primary" style="margin-right: 10px;">上一页</a>
+                    <a th:if="${currentPage < totalPages - 1}" 
+                       th:href="@{/books/admin(page=${currentPage + 1}, size=${pageSize})}" 
+                       class="btn btn-primary">下一页</a>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script th:src="@{/js/common.js}"></script>
+    <script>
+        function deleteBook(bookId) {
+            if (confirm('确定要删除这本书吗？')) {
+                ajaxRequest('/library/books/admin/delete/' + bookId, 'POST', {}, function(response) {
+                    const messageDiv = document.getElementById('message');
+                    if (response.success) {
+                        messageDiv.innerHTML = '<div class="alert alert-success">' + response.message + '</div>';
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        messageDiv.innerHTML = '<div class="alert alert-error">' + response.message + '</div>';
+                    }
+                });
+            }
+        }
+        
+        function changePageSize(size) {
+            window.location.href = '/library/books/admin?page=0&size=' + size;
+        }
+    </script>
+</body>
+</html>
+

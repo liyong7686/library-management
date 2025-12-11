@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>错误页面 - 图书管理系统</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a th:href="@{/dashboard}">图书管理系统</a>
+            </div>
+            <div class="nav-menu">
+                <a th:href="@{/dashboard}">首页</a>
+                <a th:href="@{/books}">图书列表</a>
+            </div>
+        </div>
+    </nav>
+    
+    <main class="main-content">
+        <div class="container" style="padding: 20px; text-align: center;">
+            <div class="error-container">
+                <h1 style="color: #dc3545;">出错了</h1>
+                <div class="alert alert-error" style="margin: 20px 0;">
+                    <p th:text="${error}">错误信息</p>
+                    <p th:text="${message}" style="margin-top: 10px; font-size: 14px; color: #666;"></p>
+                </div>
+                <div style="margin-top: 30px;">
+                    <a th:href="@{/books}" class="btn btn-primary">返回图书列表</a>
+                    <a th:href="@{/dashboard}" class="btn btn-secondary" style="margin-left: 10px;">返回首页</a>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
+

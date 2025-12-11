@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册 - 图书管理系统</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <h1>注册</h1>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="username">用户名</label>
+                    <input type="text" id="username" name="username" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">邮箱</label>
+                    <input type="email" id="email" name="email" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <input type="password" id="password" name="password" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="realName">真实姓名</label>
+                    <input type="text" id="realName" name="realName" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="phone">手机号</label>
+                    <input type="tel" id="phone" name="phone" class="form-control">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">注册</button>
+            </form>
+            <div class="auth-links">
+                <a th:href="@{/login}">已有账号？立即登录</a>
+            </div>
+            <div id="message"></div>
+        </div>
+    </div>
+    
+    <script th:src="@{/js/common.js}"></script>
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = serializeForm(this);
+            
+            ajaxRequest('/library/register', 'POST', formData, function(response) {
+                const messageDiv = document.getElementById('message');
+                if (response.success) {
+                    messageDiv.innerHTML = '<div class="alert alert-success">' + response.message + '</div>';
+                    setTimeout(() => {
+                        window.location.href = '/library/login';
+                    }, 2000);
+                } else {
+                    messageDiv.innerHTML = '<div class="alert alert-error">' + response.message + '</div>';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+

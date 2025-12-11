@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的借阅记录 - 图书管理系统</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a th:href="@{/dashboard}">图书管理系统</a>
+            </div>
+            <div class="nav-menu">
+                <a th:href="@{/dashboard}">首页</a>
+                <a th:href="@{/books}">图书列表</a>
+                <a th:href="@{/borrow}">我的借阅</a>
+                <a th:href="@{/books/admin}" th:if="${session.user.role.name() == 'ADMIN'}">图书管理</a>
+                <a th:href="@{/borrow/admin}" th:if="${session.user.role.name() == 'ADMIN'}">借阅管理</a>
+                <a th:href="@{/logout}">退出</a>
+            </div>
+        </div>
+    </nav>
+    
+    <main class="main-content">
+        <div class="container" style="padding: 20px;">
+            <h1>我的借阅记录</h1>
+            
+            <div id="message"></div>
+            
+            <!-- 分页大小选择器 -->
+            <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <label>每页显示：</label>
+                    <select id="pageSizeSelect" onchange="changePageSize(this.value)" style="padding: 5px; margin-left: 10px;">
+                        <option value="10" th:selected="${pageSize == 10}">10</option>
+                        <option value="20" th:selected="${pageSize == 20}">20</option>
+                        <option value="50" th:selected="${pageSize == 50}">50</option>
+                        <option value="100" th:selected="${pageSize == 100}">100</option>
+                    </select>
+                </div>
+            </div>
+            
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>书名</th>
+                        <th>作者</th>
+                        <th>借阅日期</th>
+                        <th>应还日期</th>
+                        <th>归还日期</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${records.isEmpty()}">
+                        <td colspan="8" style="text-align: center;">暂无借阅记录</td>
+                    </tr>
+                    <tr th:each="record : ${records}">
+                        <td th:text="${record.id}">1</td>
+                        <td th:text="${record.book.title}">书名</td>
+                        <td th:text="${record.book.author}">作者</td>
+                        <td th:text="${#temporals.format(record.borrowDate, 'yyyy-MM-dd HH:mm')}">借阅日期</td>
+                        <td th:text="${#temporals.format(record.dueDate, 'yyyy-MM-dd')}">应还日期</td>
+                        <td th:text="${record.returnDate != null ? #temporals.format(record.returnDate, 'yyyy-MM-dd HH:mm') : '-'}">归还日期</td>
+                        <td>
+                            <span th:if="${record.status.name() == 'BORROWED'}" class="badge badge-info">借阅中</span>
+                            <span th:if="${record.status.name() == 'RETURNED'}" class="badge badge-success">已归还</span>
+                            <span th:if="${record.status.name() == 'OVERDUE'}" class="badge badge-danger">逾期</span>
+                        </td>
+                        <td>
+                            <button th:if="${record.status.name() == 'BORROWED' || record.status.name() == 'OVERDUE'}"
+                                    th:onclick="'returnBook(' + ${record.id} + ')'" 
+                                    class="btn btn-sm btn-primary">归还</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <!-- 分页组件 -->
+            <div th:if="${totalPages != null && totalPages > 0}" class="pagination" style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <span th:text="'第 ' + (${currentPage} + 1) + ' 页 / 共 ' + ${totalPages} + ' 页，共 ' + ${totalElements} + ' 条记录'">页码信息</span>
+                </div>
+                <div>
+                    <a th:if="${currentPage > 0}" 
+                       th:href="@{/borrow(page=${currentPage - 1}, size=${pageSize})}" 
+                       class="btn btn-primary" style="margin-right: 10px;">上一页</a>
+                    <a th:if="${currentPage < totalPages - 1}" 
+                       th:href="@{/borrow(page=${currentPage + 1}, size=${pageSize})}" 
+                       class="btn btn-primary">下一页</a>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script th:src="@{/js/common.js}"></script>
+    <script>
+        function returnBook(recordId) {
+            if (confirm('确定要归还这本书吗？')) {
+                ajaxRequest('/library/borrow/return/' + recordId, 'POST', {}, function(response) {
+                    const messageDiv = document.getElementById('message');
+                    if (response.success) {
+                        messageDiv.innerHTML = '<div class="alert alert-success">' + response.message + '</div>';
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        messageDiv.innerHTML = '<div class="alert alert-error">' + response.message + '</div>';
+                    }
+                });
+            }
+        }
+        
+        function changePageSize(size) {
+            window.location.href = '/library/borrow?page=0&size=' + size;
+        }
+    </script>
+</body>
+</html>
+

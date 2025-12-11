@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图书列表 - 图书管理系统</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a th:href="@{/dashboard}">图书管理系统</a>
+            </div>
+            <div class="nav-menu" th:if="${session.user != null}">
+                <a th:href="@{/dashboard}">首页</a>
+                <a th:href="@{/books}">图书列表</a>
+                <a th:href="@{/borrow}" th:if="${session.user.role.name() == 'USER' || session.user.role.name() == 'ADMIN'}">我的借阅</a>
+                <a th:href="@{/books/admin}" th:if="${session.user.role.name() == 'ADMIN'}">图书管理</a>
+                <a th:href="@{/borrow/admin}" th:if="${session.user.role.name() == 'ADMIN'}">借阅管理</a>
+                <a th:href="@{/logout}">退出</a>
+            </div>
+            <div class="nav-menu" th:if="${session.user == null}">
+                <a th:href="@{/dashboard}">首页</a>
+                <a th:href="@{/books}">图书列表</a>
+                <a th:href="@{/login}">登录</a>
+                <a th:href="@{/register}">注册</a>
+            </div>
+        </div>
+    </nav>
+    
+    <main class="main-content">
+        <div class="container" style="padding: 20px;">
+            <h1>图书列表</h1>
+            
+            <div class="search-bar" style="margin-bottom: 20px;">
+                <form method="get" action="/library/books">
+                    <input type="text" name="keyword" placeholder="搜索图书（书名、作者、ISBN）" 
+                           th:value="${keyword}" style="padding: 8px; width: 300px;">
+                    <button type="submit" class="btn btn-primary">搜索</button>
+                    <a th:href="@{/books}" class="btn btn-secondary">重置</a>
+                </form>
+            </div>
+            
+            <div class="books-grid">
+                <div class="book-card" th:each="book : ${books}">
+                    <h3 th:text="${book.title}">书名</h3>
+                    <p><strong>作者：</strong><span th:text="${book.author}">作者</span></p>
+                    <p><strong>ISBN：</strong><span th:text="${book.isbn}">ISBN</span></p>
+                    <p><strong>分类：</strong><span th:text="${book.category}">分类</span></p>
+                    <p><strong>可借数量：</strong><span th:text="${book.availableCopies}">0</span> / <span th:text="${book.totalCopies}">0</span></p>
+                    <div class="book-actions">
+                        <a th:href="@{/books/{id}(id=${book.id})}" class="btn btn-info">查看详情</a>
+                        <button th:if="${session.user != null && (session.user.role.name() == 'USER' || session.user.role.name() == 'ADMIN') && book.availableCopies > 0}"
+                                th:onclick="'borrowBook(' + ${book.id} + ')'" 
+                                class="btn btn-primary">借阅</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div th:if="${totalPages != null}" class="pagination">
+                <a th:if="${currentPage > 0}" th:href="@{/books(page=${currentPage - 1})}" class="btn">上一页</a>
+                <span th:text="'第 ' + (${currentPage} + 1) + ' 页 / 共 ' + ${totalPages} + ' 页'">页码</span>
+                <a th:if="${currentPage < totalPages - 1}" th:href="@{/books(page=${currentPage + 1})}" class="btn">下一页</a>
+            </div>
+        </div>
+    </main>
+    
+    <script th:src="@{/js/common.js}"></script>
+    <script>
+        function borrowBook(bookId) {
+            if (confirm('确定要借阅这本书吗？')) {
+                ajaxRequest('/library/borrow/borrow', 'POST', { bookId: bookId }, function(response) {
+                    if (response.success) {
+                        alert(response.message);
+                        location.reload();
+                    } else {
+                        alert(response.message);
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>
+

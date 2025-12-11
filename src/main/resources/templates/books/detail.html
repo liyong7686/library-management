@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${book.title} + ' - 图书详情'">图书详情</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a th:href="@{/dashboard}">图书管理系统</a>
+            </div>
+            <div class="nav-menu" th:if="${session.user != null}">
+                <a th:href="@{/dashboard}">首页</a>
+                <a th:href="@{/books}">图书列表</a>
+                <a th:href="@{/borrow}" th:if="${session.user.role.name() == 'USER' || session.user.role.name() == 'ADMIN'}">我的借阅</a>
+                <a th:href="@{/books/admin}" th:if="${session.user.role.name() == 'ADMIN'}">图书管理</a>
+                <a th:href="@{/logout}">退出</a>
+            </div>
+            <div class="nav-menu" th:if="${session.user == null}">
+                <a th:href="@{/dashboard}">首页</a>
+                <a th:href="@{/books}">图书列表</a>
+                <a th:href="@{/login}">登录</a>
+            </div>
+        </div>
+    </nav>
+    
+    <main class="main-content">
+        <div class="container" style="padding: 20px;">
+            <a th:href="@{/books}" class="btn btn-secondary" style="margin-bottom: 20px;">返回列表</a>
+            
+            <div class="book-detail">
+                <h1 th:text="${book.title}">书名</h1>
+                <div class="book-info">
+                    <p><strong>作者：</strong><span th:text="${book.author}">作者</span></p>
+                    <p><strong>ISBN：</strong><span th:text="${book.isbn}">ISBN</span></p>
+                    <p><strong>出版社：</strong><span th:text="${book.publisher}">出版社</span></p>
+                    <p><strong>出版日期：</strong>
+                        <span th:if="${book.publishDate != null}" 
+                              th:text="${#temporals.format(book.publishDate, 'yyyy-MM-dd')}">日期</span>
+                    </p>
+                    <p><strong>分类：</strong><span th:text="${book.category}">分类</span></p>
+                    <p><strong>总册数：</strong><span th:text="${book.totalCopies}">0</span></p>
+                    <p><strong>可借数量：</strong><span th:text="${book.availableCopies}">0</span></p>
+                    <div th:if="${book.description != null && !book.description.isEmpty()}">
+                        <h3>简介</h3>
+                        <p th:text="${book.description}">简介</p>
+                    </div>
+                </div>
+                
+                <div class="book-actions" style="margin-top: 20px;">
+                    <a th:href="@{/books}" class="btn btn-secondary">返回列表</a>
+                    <button th:if="${session.user != null && (session.user.role.name() == 'USER' || session.user.role.name() == 'ADMIN') && book.availableCopies > 0}"
+                            th:onclick="'borrowBook(' + ${book.id} + ')'" 
+                            class="btn btn-primary">借阅</button>
+                    <p th:if="${book.availableCopies == 0}" class="text-warning">暂无库存</p>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script th:src="@{/js/common.js}"></script>
+    <script>
+        function borrowBook(bookId) {
+            if (confirm('确定要借阅这本书吗？')) {
+                ajaxRequest('/library/borrow/borrow', 'POST', { bookId: bookId }, function(response) {
+                    if (response.success) {
+                        alert(response.message);
+                        location.reload();
+                    } else {
+                        alert(response.message);
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>
+
