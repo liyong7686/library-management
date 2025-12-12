@@ -7,21 +7,7 @@
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="container">
-            <div class="nav-brand">
-                <a th:href="@{/dashboard}">图书管理系统</a>
-            </div>
-            <div class="nav-menu">
-                <a th:href="@{/dashboard}">首页</a>
-                <a th:href="@{/books}">图书列表</a>
-                <a th:href="@{/borrow}">我的借阅</a>
-                <a th:href="@{/books/admin}" th:if="${session.user.role.name() == 'ADMIN'}">图书管理</a>
-                <a th:href="@{/borrow/admin}" th:if="${session.user.role.name() == 'ADMIN'}">借阅管理</a>
-                <a th:href="@{/logout}">退出</a>
-            </div>
-        </div>
-    </nav>
+    <div th:replace="~{fragments/navbar :: navbar('borrow')}"></div>
     
     <main class="main-content">
         <div class="container" style="padding: 20px;">

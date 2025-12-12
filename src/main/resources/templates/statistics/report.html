@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>借阅统计报表 - 图书管理系统</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script th:src="@{/js/chart.min.js}"></script>
+    <style>
+        .stats-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .stat-card h3 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+        .stat-card .value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #333;
+            margin: 0.5rem 0;
+        }
+        .stat-card .label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .chart-container {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        .chart-container h2 {
+            color: #667eea;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        .table-container h2 {
+            color: #667eea;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+            margin-top: 1rem;
+        }
+        .two-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+        @media (max-width: 768px) {
+            .two-columns {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div th:replace="~{fragments/navbar :: navbar('statistics')}"></div>
+    
+    <main class="main-content">
+        <div class="container stats-container" style="padding: 20px;">
+            <h1 style="color: white; margin-bottom: 2rem;">借阅统计报表</h1>
+            
+            <!-- 总体统计卡片 -->
+            <div class="stats-grid" th:if="${report.overall}">
+                <div class="stat-card">
+                    <h3>总借阅数量</h3>
+                    <div class="value" th:text="${report.overall.totalBorrows}">0</div>
+                    <div class="label">累计借阅次数</div>
+                </div>
+                <div class="stat-card">
+                    <h3>当前借阅中</h3>
+                    <div class="value" style="color: #3498db;" th:text="${report.overall.borrowedCount}">0</div>
+                    <div class="label">正在借阅的图书</div>
+                </div>
+                <div class="stat-card">
+                    <h3>已归还</h3>
+                    <div class="value" style="color: #2ecc71;" th:text="${report.overall.returnedCount}">0</div>
+                    <div class="label">已归还的图书</div>
+                </div>
+                <div class="stat-card">
+                    <h3>逾期数量</h3>
+                    <div class="value" style="color: #e74c3c;" th:text="${report.overall.overdueCount}">0</div>
+                    <div class="label">逾期未归还</div>
+                </div>
+                <div class="stat-card">
+                    <h3>归还率</h3>
+                    <div class="value" style="color: #9b59b6;" th:text="${report.overall.returnRate} + '%'">0%</div>
+                    <div class="label">归还率百分比</div>
+                </div>
+            </div>
+            
+            <!-- 图表区域 -->
+            <div class="two-columns">
+                <!-- 借阅状态分布饼图 -->
+                <div class="chart-container">
+                    <h2>借阅状态分布</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- 图书分类借阅统计 -->
+                <div class="chart-container">
+                    <h2>图书分类借阅统计（Top 10）</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 按日期统计 -->
+            <div class="chart-container">
+                <h2>最近30天借阅趋势</h2>
+                <div class="chart-wrapper" style="height: 400px;">
+                    <canvas id="dateChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- 按月份统计 -->
+            <div class="chart-container">
+                <h2>最近12个月借阅趋势</h2>
+                <div class="chart-wrapper" style="height: 400px;">
+                    <canvas id="monthChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- 最受欢迎的图书 -->
+            <div class="table-container">
+                <h2>最受欢迎的图书（Top 10）</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>排名</th>
+                            <th>书名</th>
+                            <th>作者</th>
+                            <th>分类</th>
+                            <th>借阅次数</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${report.topBooks == null || report.topBooks.isEmpty()}">
+                            <td colspan="5" style="text-align: center;">暂无数据</td>
+                        </tr>
+                        <tr th:each="book, iterStat : ${report.topBooks}">
+                            <td th:text="${iterStat.index + 1}">1</td>
+                            <td th:text="${book.title}">书名</td>
+                            <td th:text="${book.author ?: '-'}">作者</td>
+                            <td th:text="${book.category ?: '-'}">分类</td>
+                            <td th:text="${book.borrowCount}">0</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 最活跃的用户 -->
+            <div class="table-container">
+                <h2>最活跃的用户（Top 10）</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>排名</th>
+                            <th>用户名</th>
+                            <th>真实姓名</th>
+                            <th>邮箱</th>
+                            <th>借阅次数</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${report.topUsers == null || report.topUsers.isEmpty()}">
+                            <td colspan="5" style="text-align: center;">暂无数据</td>
+                        </tr>
+                        <tr th:each="user, iterStat : ${report.topUsers}">
+                            <td th:text="${iterStat.index + 1}">1</td>
+                            <td th:text="${user.username}">用户名</td>
+                            <td th:text="${user.realName ?: '-'}">真实姓名</td>
+                            <td th:text="${user.email}">邮箱</td>
+                            <td th:text="${user.borrowCount}">0</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+    
+    <div th:replace="~{fragments/footer :: footer}"></div>
+    
+    <script th:src="@{/js/common.js}"></script>
+    <script th:inline="javascript">
+        // 从Thymeleaf获取数据 - 使用JSON字符串解析
+        let reportData = {};
+        try {
+            const reportJsonStr = /*[[${reportJson}]]*/ '{}';
+            reportData = JSON.parse(reportJsonStr);
+        } catch (e) {
+            console.error('解析报告数据失败:', e);
+            // 备用方案：直接从Thymeleaf获取
+            reportData = {
+                byStatus: {
+                    BORROWED: /*[[${report.byStatus.BORROWED}]]*/ 0,
+                    RETURNED: /*[[${report.byStatus.RETURNED}]]*/ 0,
+                    OVERDUE: /*[[${report.byStatus.OVERDUE}]]*/ 0
+                },
+                byCategory: /*[[${report.byCategory}]]*/ [],
+                byDate: /*[[${report.byDate}]]*/ [],
+                byMonth: /*[[${report.byMonth}]]*/ []
+            };
+        }
+        
+        // 确保数据是数组格式
+        if (!Array.isArray(reportData.byCategory)) {
+            reportData.byCategory = reportData.byCategory || [];
+        }
+        if (!Array.isArray(reportData.byDate)) {
+            reportData.byDate = reportData.byDate || [];
+        }
+        if (!Array.isArray(reportData.byMonth)) {
+            reportData.byMonth = reportData.byMonth || [];
+        }
+        
+        // 调试：输出数据
+        console.log('报告数据:', reportData);
+        console.log('状态数据:', reportData.byStatus);
+        console.log('分类数据:', reportData.byCategory);
+        console.log('日期数据:', reportData.byDate);
+        console.log('月份数据:', reportData.byMonth);
+        
+        // 等待页面和Chart.js加载完成
+        window.addEventListener('load', function() {
+            // 检查Chart.js是否加载
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js未加载，请检查chart.min.js文件');
+                return;
+            }
+            
+            console.log('报告数据:', reportData);
+            
+            // 借阅状态分布饼图
+            const statusCtx = document.getElementById('statusChart');
+            if (!statusCtx) {
+                console.error('找不到statusChart元素');
+                return;
+            }
+            
+            new Chart(statusCtx.getContext('2d'), {
+                type: 'pie',
+                data: {
+                    labels: ['借阅中', '已归还', '逾期'],
+                    datasets: [{
+                        data: [
+                            reportData.byStatus.BORROWED || 0,
+                            reportData.byStatus.RETURNED || 0,
+                            reportData.byStatus.OVERDUE || 0
+                        ],
+                        backgroundColor: ['#3498db', '#2ecc71', '#e74c3c']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        
+            // 图书分类借阅统计（Top 10）
+            const categoryData = (reportData.byCategory || []).slice(0, 10);
+            const categoryCtx = document.getElementById('categoryChart');
+            if (categoryCtx && categoryData.length > 0) {
+                new Chart(categoryCtx.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: categoryData.map(function(item) { return item.category || '未分类'; }),
+                        datasets: [{
+                            label: '借阅次数',
+                            data: categoryData.map(function(item) { return item.count || 0; }),
+                            backgroundColor: '#667eea'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            } else {
+                console.warn('分类数据为空或找不到categoryChart元素', categoryData);
+            }
+            
+            // 按日期统计（最近30天）
+            const dateData = (reportData.byDate || []);
+            console.log('原始日期数据:', dateData);
+            
+            // 确保数据按日期排序
+            dateData.sort(function(a, b) {
+                if (a.date && b.date) {
+                    return a.date.localeCompare(b.date);
+                }
+                return 0;
+            });
+            
+            const dateCtx = document.getElementById('dateChart');
+            if (dateCtx) {
+                if (dateData.length > 0) {
+                    // 格式化日期标签（只显示月-日）
+                    const formattedLabels = dateData.map(function(item) {
+                        if (item.date) {
+                            const dateParts = item.date.split('-');
+                            if (dateParts.length >= 3) {
+                                return dateParts[1] + '-' + dateParts[2];
+                            }
+                            return item.date;
+                        }
+                        return '';
+                    });
+                    
+                    const counts = dateData.map(function(item) {
+                        return item.count || 0;
+                    });
+                    
+                    console.log('日期标签:', formattedLabels);
+                    console.log('借阅数量:', counts);
+                    
+                    new Chart(dateCtx.getContext('2d'), {
+                        type: 'line',
+                        data: {
+                            labels: formattedLabels,
+                            datasets: [{
+                                label: '借阅数量',
+                                data: counts,
+                                borderColor: '#667eea',
+                                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                                tension: 0.4,
+                                fill: true,
+                                pointRadius: 3,
+                                pointHoverRadius: 5
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: {
+                                    ticks: {
+                                        maxRotation: 45,
+                                        minRotation: 45
+                                    }
+                                },
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        stepSize: 1
+                                    }
+                                }
+                            },
+                            plugins: {
+                                tooltip: {
+                                    callbacks: {
+                                        title: function(context) {
+                                            // 显示完整日期
+                                            const index = context[0].dataIndex;
+                                            return dateData[index].date || '';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    console.warn('日期数据为空');
+                    // 即使数据为空，也创建图表显示空状态
+                    new Chart(dateCtx.getContext('2d'), {
+                        type: 'line',
+                        data: {
+                            labels: [],
+                            datasets: [{
+                                label: '借阅数量',
+                                data: [],
+                                borderColor: '#667eea',
+                                backgroundColor: 'rgba(102, 126, 234, 0.1)'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+                }
+            } else {
+                console.warn('找不到dateChart元素');
+            }
+            
+            // 按月份统计（最近12个月）
+            const monthData = (reportData.byMonth || []).slice().reverse(); // 反转以按时间正序显示
+            const monthCtx = document.getElementById('monthChart');
+            if (monthCtx && monthData.length > 0) {
+                new Chart(monthCtx.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: monthData.map(function(item) { return item.monthLabel || ''; }),
+                        datasets: [{
+                            label: '借阅数量',
+                            data: monthData.map(function(item) { return item.count || 0; }),
+                            backgroundColor: '#9b59b6'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            } else {
+                console.warn('月份数据为空或找不到monthChart元素', monthData);
+            }
+        });
+    </script>
+</body>
+</html>

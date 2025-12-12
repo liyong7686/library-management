@@ -17,6 +17,7 @@
 - ✅ 用户登录（支持三种角色）
 - ✅ 找回密码（邮箱验证码）
 - ✅ 角色管理（访客、普通用户、管理员）
+- ✅ 个人资料管理（查看、编辑个人信息、修改密码）
 
 ### 2. 图书管理
 - ✅ 图书列表浏览（访客可访问）
@@ -36,6 +37,21 @@
 - ✅ 借阅记录管理（管理员，支持分页，默认每页10条）
 - ✅ 逾期检查
 
+### 4. 统计报表（管理员）
+- ✅ 总体统计（总借阅数、当前借阅中、已归还、逾期数量、归还率）
+- ✅ 借阅状态分布图表（饼图）
+- ✅ 图书分类借阅统计（柱状图）
+- ✅ 最近30天借阅趋势（折线图）
+- ✅ 最近12个月借阅趋势（柱状图）
+- ✅ 最受欢迎的图书排行（Top 10）
+- ✅ 最活跃的用户排行（Top 10）
+
+### 5. 个人资料管理
+- ✅ 查看个人资料（用户名、邮箱、真实姓名、手机号、角色、注册时间）
+- ✅ 编辑个人资料（邮箱、真实姓名、手机号）
+- ✅ 修改密码（需要验证原密码）
+- ✅ 用户名不可修改（系统唯一标识）
+
 ## 角色权限
 
 ### 访客（GUEST）
@@ -48,12 +64,15 @@
 - 借阅图书
 - 查看自己的借阅记录
 - 归还图书
+- 管理个人资料
 
 ### 管理员（ADMIN）
 - 所有普通用户权限
 - 图书管理（增删改查）
 - 查看所有借阅记录
 - 管理所有借阅记录
+- 查看借阅统计报表
+- 管理个人资料
 
 ## 数据库配置
 
@@ -225,118 +244,7 @@ library-management/
 
 1. 添加邮件服务，实现真正的邮件验证码发送
 2. 添加图书封面图片上传功能
-3. 添加借阅统计和报表功能
-4. 添加用户个人资料管理
-5. 添加图书评价功能
-6. 优化前端UI，使用现代化框架（如Vue.js或React）
-
-## 部署到 GitHub
-
-### 准备工作
-
-1. **确保已安装 Git**
-   ```bash
-   git --version
-   ```
-
-2. **在 GitHub 上创建仓库**
-   - 访问 https://github.com
-   - 点击右上角的 "+" 号，选择 "New repository"
-   - 填写仓库名称（如：library-management）
-   - 选择 Public 或 Private
-   - 不要勾选 "Initialize this repository with a README"（因为本地已有 README）
-   - 点击 "Create repository"
-
-### 初始化并推送到 GitHub
-
-1. **进入项目目录**
-   ```bash
-   cd e:\workspace\TestPython31\library-management
-   ```
-
-2. **初始化 Git 仓库**
-   ```bash
-   git init
-   ```
-
-3. **添加所有文件到暂存区**
-   ```bash
-   git add .
-   ```
-
-4. **提交代码**
-   ```bash
-   git commit -m "Initial commit: 图书管理系统"
-   ```
-
-5. **添加远程仓库**
-   ```bash
-   # 将 YOUR_USERNAME 替换为你的 GitHub 用户名
-   # 将 REPOSITORY_NAME 替换为你的仓库名称
-   git remote add origin https://github.com/YOUR_USERNAME/REPOSITORY_NAME.git
-   ```
-
-6. **推送到 GitHub**
-   ```bash
-   # 首次推送
-   git push -u origin main
-   
-   # 如果默认分支是 master，使用：
-   # git push -u origin master
-   ```
-
-### 后续更新代码
-
-当代码有更新时，使用以下命令推送到 GitHub：
-
-```bash
-# 1. 查看修改的文件
-git status
-
-# 2. 添加修改的文件
-git add .
-
-# 3. 提交修改
-git commit -m "描述你的修改内容"
-
-# 4. 推送到 GitHub
-git push
-```
-
-### 常用 Git 命令
-
-```bash
-# 查看提交历史
-git log
-
-# 查看当前状态
-git status
-
-# 查看差异
-git diff
-
-# 创建新分支
-git checkout -b feature-branch-name
-
-# 切换分支
-git checkout main
-
-# 合并分支
-git merge feature-branch-name
-
-# 拉取远程更新
-git pull
-```
-
-### 注意事项
-
-1. **敏感信息**：不要将包含密码、密钥等敏感信息的配置文件提交到 GitHub
-   - 已通过 `.gitignore` 排除 `application-local.yml`、`application-dev.yml`、`application-prod.yml`
-   - 生产环境配置应使用环境变量或配置中心
-
-2. **数据库脚本**：`init_complete.sql` 已包含在仓库中，但密码是默认的测试密码
-
-3. **IDE 配置**：`.idea/`、`*.iml` 等 IDE 配置文件已通过 `.gitignore` 排除
-
-4. **编译文件**：`target/` 目录已排除，不需要提交编译后的文件
-
+3. 添加图书评价功能
+4. 优化前端UI，使用现代化框架（如Vue.js或React）
+5. 添加数据导出功能（Excel、PDF）
+6. 添加更多统计维度（按时间段筛选、自定义报表）

@@ -48,11 +48,23 @@ body {
     text-decoration: none;
     padding: 0.5rem 1rem;
     border-radius: 5px;
-    transition: background 0.3s;
+    transition: all 0.3s;
+    position: relative;
 }
 
 .nav-menu a:hover {
     background: #f0f0f0;
+}
+
+.nav-menu a.active {
+    background: #667eea;
+    color: white !important;
+    font-weight: 600;
+}
+
+.nav-menu a.active:hover {
+    background: #5568d3;
+    color: white !important;
 }
 
 /* 主内容 */

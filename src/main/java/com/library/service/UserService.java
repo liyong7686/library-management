@@ -151,5 +151,78 @@ public class UserService {
     public Optional<User> findById(Long id) {
         return userRepository.findById(id);
     }
+
+    /**
+     * 更新用户个人资料
+     */
+    @Transactional
+    public Map<String, Object> updateProfile(Long userId, String email, String realName, String phone) {
+        Map<String, Object> result = new HashMap<>();
+        
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (!userOpt.isPresent()) {
+            result.put("success", false);
+            result.put("message", "用户不存在");
+            return result;
+        }
+        
+        User user = userOpt.get();
+        
+        // 检查邮箱是否被其他用户使用
+        if (email != null && !email.equals(user.getEmail())) {
+            if (userRepository.existsByEmail(email)) {
+                result.put("success", false);
+                result.put("message", "邮箱已被其他用户使用");
+                return result;
+            }
+            user.setEmail(email);
+        }
+        
+        if (realName != null) {
+            user.setRealName(realName);
+        }
+        
+        if (phone != null) {
+            user.setPhone(phone);
+        }
+        
+        userRepository.save(user);
+        result.put("success", true);
+        result.put("message", "个人资料更新成功");
+        result.put("user", user);
+        return result;
+    }
+
+    /**
+     * 修改密码
+     */
+    @Transactional
+    public Map<String, Object> changePassword(Long userId, String oldPassword, String newPassword) {
+        Map<String, Object> result = new HashMap<>();
+        
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (!userOpt.isPresent()) {
+            result.put("success", false);
+            result.put("message", "用户不存在");
+            return result;
+        }
+        
+        User user = userOpt.get();
+        
+        // 验证旧密码
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            result.put("success", false);
+            result.put("message", "原密码错误");
+            return result;
+        }
+        
+        // 更新密码
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        
+        result.put("success", true);
+        result.put("message", "密码修改成功");
+        return result;
+    }
 }
 

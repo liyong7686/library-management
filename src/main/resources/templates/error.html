@@ -7,17 +7,7 @@
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="container">
-            <div class="nav-brand">
-                <a th:href="@{/dashboard}">图书管理系统</a>
-            </div>
-            <div class="nav-menu">
-                <a th:href="@{/dashboard}">首页</a>
-                <a th:href="@{/books}">图书列表</a>
-            </div>
-        </div>
-    </nav>
+    <div th:replace="~{fragments/navbar :: navbar('')}"></div>
     
     <main class="main-content">
         <div class="container" style="padding: 20px; text-align: center;">

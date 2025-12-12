@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人资料 - 图书管理系统</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .profile-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .profile-section {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        .profile-section h2 {
+            color: #667eea;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .profile-info {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            align-items: center;
+        }
+        .profile-info label {
+            font-weight: 600;
+            color: #555;
+        }
+        .profile-info .value {
+            color: #333;
+        }
+        .edit-mode .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        .readonly-field {
+            background-color: #f5f5f5;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div th:replace="~{fragments/navbar :: navbar('profile')}"></div>
+    
+    <main class="main-content">
+        <div class="container profile-container" style="padding: 20px;">
+            <h1 style="color: white; margin-bottom: 2rem;">个人资料</h1>
+            
+            <!-- 基本信息 -->
+            <div class="profile-section">
+                <h2>基本信息</h2>
+                <div id="profileView">
+                    <div class="profile-info">
+                        <label>用户名：</label>
+                        <div class="value" th:text="${user.username}">username</div>
+                    </div>
+                    <div class="profile-info">
+                        <label>邮箱：</label>
+                        <div class="value" th:text="${user.email}">email</div>
+                    </div>
+                    <div class="profile-info">
+                        <label>真实姓名：</label>
+                        <div class="value" th:text="${user.realName ?: '未设置'}">realName</div>
+                    </div>
+                    <div class="profile-info">
+                        <label>手机号：</label>
+                        <div class="value" th:text="${user.phone ?: '未设置'}">phone</div>
+                    </div>
+                    <div class="profile-info">
+                        <label>角色：</label>
+                        <div class="value">
+                            <span th:if="${user.role.name() == 'ADMIN'}">管理员</span>
+                            <span th:if="${user.role.name() == 'USER'}">普通用户</span>
+                            <span th:if="${user.role.name() == 'GUEST'}">访客</span>
+                        </div>
+                    </div>
+                    <div class="profile-info">
+                        <label>注册时间：</label>
+                        <div class="value" th:text="${#temporals.format(user.createdAt, 'yyyy-MM-dd HH:mm:ss')}">createdAt</div>
+                    </div>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-primary" onclick="enableEdit()">编辑资料</button>
+                    </div>
+                </div>
+                
+                <div id="profileEdit" style="display: none;" class="edit-mode">
+                    <form id="profileForm">
+                        <div class="form-group">
+                            <label for="username">用户名</label>
+                            <input type="text" id="username" name="username" class="form-control readonly-field" 
+                                   th:value="${user.username}" readonly>
+                            <small class="form-text">用户名不可修改</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">邮箱 <span style="color: red;">*</span></label>
+                            <input type="email" id="email" name="email" class="form-control" 
+                                   th:value="${user.email}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="realName">真实姓名</label>
+                            <input type="text" id="realName" name="realName" class="form-control" 
+                                   th:value="${user.realName}">
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">手机号</label>
+                            <input type="tel" id="phone" name="phone" class="form-control" 
+                                   th:value="${user.phone}" pattern="[0-9]{11}" maxlength="11">
+                            <small class="form-text">请输入11位手机号码</small>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary">保存</button>
+                            <button type="button" class="btn btn-secondary" onclick="cancelEdit()">取消</button>
+                        </div>
+                    </form>
+                </div>
+                <div id="profileMessage"></div>
+            </div>
+            
+            <!-- 修改密码 -->
+            <div class="profile-section">
+                <h2>修改密码</h2>
+                <form id="passwordForm">
+                    <div class="form-group">
+                        <label for="oldPassword">原密码 <span style="color: red;">*</span></label>
+                        <input type="password" id="oldPassword" name="oldPassword" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newPassword">新密码 <span style="color: red;">*</span></label>
+                        <input type="password" id="newPassword" name="newPassword" class="form-control" required minlength="6">
+                        <small class="form-text">密码长度至少6位</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">确认新密码 <span style="color: red;">*</span></label>
+                        <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" required minlength="6">
+                    </div>
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-primary">修改密码</button>
+                    </div>
+                </form>
+                <div id="passwordMessage"></div>
+            </div>
+        </div>
+    </main>
+    
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 图书管理系统. All rights reserved.</p>
+        </div>
+    </footer>
+    
+    <script th:src="@{/js/common.js}"></script>
+    <script>
+        function enableEdit() {
+            document.getElementById('profileView').style.display = 'none';
+            document.getElementById('profileEdit').style.display = 'block';
+        }
+        
+        function cancelEdit() {
+            document.getElementById('profileView').style.display = 'block';
+            document.getElementById('profileEdit').style.display = 'none';
+            document.getElementById('profileMessage').innerHTML = '';
+            // 重置表单
+            document.getElementById('profileForm').reset();
+        }
+        
+        // 更新个人资料
+        document.getElementById('profileForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = serializeForm(this);
+            const messageDiv = document.getElementById('profileMessage');
+            
+            ajaxRequest('/library/profile/update', 'POST', formData, function(response) {
+                if (response.success) {
+                    messageDiv.innerHTML = '<div class="alert alert-success">' + response.message + '</div>';
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    messageDiv.innerHTML = '<div class="alert alert-error">' + response.message + '</div>';
+                }
+            });
+        });
+        
+        // 修改密码
+        document.getElementById('passwordForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const messageDiv = document.getElementById('passwordMessage');
+            
+            if (newPassword !== confirmPassword) {
+                messageDiv.innerHTML = '<div class="alert alert-error">两次输入的密码不一致</div>';
+                return;
+            }
+            
+            if (newPassword.length < 6) {
+                messageDiv.innerHTML = '<div class="alert alert-error">密码长度至少6位</div>';
+                return;
+            }
+            
+            const formData = serializeForm(this);
+            ajaxRequest('/library/profile/change-password', 'POST', formData, function(response) {
+                if (response.success) {
+                    messageDiv.innerHTML = '<div class="alert alert-success">' + response.message + '</div>';
+                    document.getElementById('passwordForm').reset();
+                    setTimeout(() => {
+                        messageDiv.innerHTML = '';
+                    }, 3000);
+                } else {
+                    messageDiv.innerHTML = '<div class="alert alert-error">' + response.message + '</div>';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

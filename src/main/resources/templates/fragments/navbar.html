@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <!-- 导航栏片段 -->
+    <nav class="navbar" th:fragment="navbar(currentPage='')">
+        <div class="container">
+            <div class="nav-brand">
+                <a th:href="@{/dashboard}">图书管理系统</a>
+            </div>
+            <div class="nav-menu" th:if="${session.user != null}">
+                <a th:href="@{/dashboard}" 
+                   th:classappend="${currentPage == 'dashboard'} ? 'active' : ''">首页</a>
+                <a th:href="@{/books}" 
+                   th:classappend="${currentPage == 'books'} ? 'active' : ''">图书列表</a>
+                <a th:href="@{/borrow}" 
+                   th:if="${session.user.role.name() == 'USER' || session.user.role.name() == 'ADMIN'}"
+                   th:classappend="${currentPage == 'borrow'} ? 'active' : ''">我的借阅</a>
+                <a th:href="@{/books/admin}" 
+                   th:if="${session.user.role.name() == 'ADMIN'}"
+                   th:classappend="${currentPage == 'books-admin'} ? 'active' : ''">图书管理</a>
+                <a th:href="@{/borrow/admin}" 
+                   th:if="${session.user.role.name() == 'ADMIN'}"
+                   th:classappend="${currentPage == 'borrow-admin'} ? 'active' : ''">借阅管理</a>
+                <a th:href="@{/statistics}" 
+                   th:if="${session.user.role.name() == 'ADMIN'}"
+                   th:classappend="${currentPage == 'statistics'} ? 'active' : ''">统计报表</a>
+                <a th:href="@{/profile}" 
+                   th:classappend="${currentPage == 'profile'} ? 'active' : ''">个人资料</a>
+                <a th:href="@{/logout}">退出</a>
+            </div>
+            <div class="nav-menu" th:if="${session.user == null}">
+                <a th:href="@{/dashboard}" 
+                   th:classappend="${currentPage == 'dashboard'} ? 'active' : ''">首页</a>
+                <a th:href="@{/books}" 
+                   th:classappend="${currentPage == 'books'} ? 'active' : ''">图书列表</a>
+                <a th:href="@{/login}" 
+                   th:classappend="${currentPage == 'login'} ? 'active' : ''">登录</a>
+                <a th:href="@{/register}" 
+                   th:classappend="${currentPage == 'register'} ? 'active' : ''">注册</a>
+            </div>
+        </div>
+    </nav>
+</body>
+</html>
